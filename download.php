@@ -128,83 +128,89 @@ class DownloadFile
 		}
 	}
 	
-	private function lookForHlsM3u8(string $content='', string $title='')
-	{
-            self::log(__METHOD__."()");
-		//echo __METHOD__."\r\n";
-		$test = explode('setVideoHLS(\'',$content);
-		if(!array_key_exists(1,$test)){
-			return;
-		}
-		$output_array = [];
-		$m3u8 = null;
-		$result = preg_match('/https\:\/\/(.)*hls.m3u8/',$content,$output_array);
-		
-		foreach($output_array as $output){
-			if($output !== ''){
-				$m3u8 = $output;
-				break;
-			}
-		}
-		if($m3u8 === null){
-			return false;
-		}
-		//echo $m3u8;
-		self::getContentOfHlsM3u8($m3u8,$title);
-                return true;
-		//echo $content;
-		//var_dump($test[1]);
-		//var_dump($output_array);
-	}
-
-	private function getContentOfHlsM3u8(string $m3u8='',string $title='')
-	{
-            self::log(__METHOD__."()");
-            //echo __METHOD__." ".$m3u8."\r\n";
-		$ch = curl_init();
-		
-		$url = $m3u8;
-
-		curl_setopt($ch, CURLOPT_URL, $url);
-		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-		curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-
-		// Dla stron HTTPS:
-		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-
-		$content = curl_exec($ch);
-
-		if (curl_errno($ch)) {
-			echo 'Błąd cURL: ' . curl_error($ch);
-		}
-		else {
-			//echo $content."\r\n";
-			self::parseContentOfHlsM3u8($content,$m3u8,$title);
-		}
-
-		curl_close($ch);
-	}
-	
-    private function parseContentOfHlsM3u8(string $content='', string $m3u8='', string $title='')
+    private function lookForHlsM3u8(string $content='', string $title='')
     {
         self::log(__METHOD__."()");
-            $qualitySettings = [
-              'hls-1080p-','hls-720p-','hls-480p-','hls-360p-','hls-250p-'
-            ];
-            $tmp = preg_split('/\r\n|\r|\n/', $content);
-            $downloadFileParts = null;
+	$test = explode('setVideoHLS(\'',$content);
+	if(!array_key_exists(1,$test)){
+            return;
+	}
+	$output_array = [];
+	$m3u8 = null;
+	$result = preg_match('/https\:\/\/(.)*hls.m3u8/',$content,$output_array);
+		
+	foreach($output_array as $output){
+            if($output !== ''){
+                $m3u8 = $output;
+		break;
+	}
+	}
+	if($m3u8 === null){
+            return false;
+	}
+	//echo $m3u8;
+	self::getContentOfHlsM3u8($m3u8,$title);
+        return true;
+    }
+
+    private function getContentOfHlsM3u8(string $m3u8='',string $title='')
+    {
+        self::log(__METHOD__."()");
+
+        $ch = curl_init();
+
+        $url = $m3u8;
+
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+
+        // Dla stron HTTPS:
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+
+            $content = curl_exec($ch);
+
+            $info = curl_getinfo($ch);
+
+            if (curl_errno($ch)) {
+                self::log(__METHOD__."() cURL ERROR:".PHP_EOL.curl_error($ch));
+                curl_close($ch);
+                return false;
+            }
+            if($info['http_code']!==200){
+                self::log(__METHOD__."() cURL HTTP CODE ERROR:".PHP_EOL.$info['http_code']);
+                curl_close($ch);
+                return false;
+            }
+
+            if ($content === false || empty($content)) {
+                self::log(__METHOD__."() cURL CONTENT ERROR:".PHP_EOL."No content received for {$url}. It might be an empty file or a download failure.");
+                curl_close($ch);
+                return false;
+            }
+            curl_close($ch);
+            self::parseContentOfHlsM3u8($content,$m3u8,$title);
+    }
+
+    private function parseContentOfHlsM3u8(string $content='', string $m3u8='', string $title='')
+    {
+        self::log(__METHOD__."() content:".PHP_EOL.$content);
+        $qualitySettings = [
+            'hls-1080p','hls-720p','hls-480p','hls-360p','hls-250p'
+        ];
+        $tmp = preg_split('/\r\n|\r|\n/', $content);
+        $downloadFileParts = null;
             
-            foreach($qualitySettings as $quality){
-                foreach($tmp as $data){
-                    if(preg_match('/^'.$quality.'/', $data)){
-                        //echo "FOUND - ".$data."\r\n";
-                        $downloadFileParts = $data;
-                        break 2;
-                    }
+        foreach($qualitySettings as $quality){
+            foreach($tmp as $data){
+                if(preg_match('/^'.$quality.'/', $data)){
+                    self::log(__METHOD__."() FOUND - ".$data);
+                    $downloadFileParts = $data;
+                    break 2;
                 }
             }
-            self::downloadFileParts($downloadFileParts,$m3u8,$title);
-            
+        }
+        self::downloadFileParts($downloadFileParts,$m3u8,$title);
     }
 
     private function downloadFileParts(?string $downloadFileParts=null, string $m3u8='', string $title='')
