@@ -1,0 +1,1 @@
+RewriteCond %{REQUEST_URI} !^/favicon\.ico [NC]
