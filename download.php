@@ -8,6 +8,8 @@ class DownloadFile
 {
     private string $uniqid='';
     private string $logDirectory='';
+    private string $completeFileDirectory='';
+    private string $temporaryFileDirectory='';
     private DOMDocument $dom;
     private string $logFile='';
 	
@@ -15,6 +17,9 @@ class DownloadFile
     {
         $this->uniqid = uniqid();
         self::createLogDirectory();
+        self::createLogFile();
+        self::createCompleteFileDirectory();
+        self::createTemporaryFileDirectory();
         $this->dom = new DOMDocument();
     }
 
@@ -53,30 +58,23 @@ class DownloadFile
             exit();
 	}	
 	$url = $argv[1];
-		
-		
-		$ch = curl_init();
-
-		curl_setopt($ch, CURLOPT_URL, $url);
-		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-		curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-
-		// Dla stron HTTPS:
-		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-
-		$content = curl_exec($ch);
-
-		if (curl_errno($ch)) {
-                    self::log(__METHOD__."() cURL ERROR:".PHP_EOL.curl_error($ch));
-                    echo 'Błąd cURL: ' . curl_error($ch);
-		}
-		else {
-			//echo $content;
-			self::readDOM($content);
-		}
-
-		curl_close($ch);
+        $ch = curl_init();
+	curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+	curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+	// Dla stron HTTPS:
+	curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+	$content = curl_exec($ch);
+        if (curl_errno($ch)) {
+            self::log(__METHOD__."() cURL ERROR:".PHP_EOL.curl_error($ch));
+            echo 'Błąd cURL: ' . curl_error($ch);
 	}
+	else {
+            //echo $content;
+            self::readDOM($content);
+	}
+	curl_close($ch);
+    }
 	
     private function readDOM(string $content='')
     {
@@ -216,43 +214,22 @@ class DownloadFile
     private function downloadFileParts(?string $downloadFileParts=null, string $m3u8='', string $title='')
     {
         self::log(__METHOD__."()");
-        
         if($downloadFileParts === null){
             self::log(__METHOD__."() ERROR:".PHP_EOL." downloadFileParts === null");
             return;
         }
         self::log(__METHOD__."() QUALITY:".PHP_EOL.$downloadFileParts);
         self::log(__METHOD__."() URL:".PHP_EOL.$m3u8);
-
         $quality = explode('.',$downloadFileParts);
-
         self::log(__METHOD__."() QUALITY[0]:".PHP_EOL.$quality[0]);
         $filesURL = substr($m3u8, 0,-8);
         self::log(__METHOD__."() FILES URL:".PHP_EOL.$filesURL);
         $curlError = false;
-        
-        $downloadCompleteDirectory = __DIR__.DIRECTORY_SEPARATOR."complete";
-        
-        $downloadTemporaryDirectory = __DIR__.DIRECTORY_SEPARATOR."temporary";
-        
-        if (!is_dir($downloadTemporaryDirectory)) {
-            if (!mkdir($downloadTemporaryDirectory, 0777, true)) {
-                die("Failed to create temporary download directory: {$downloadTemporaryDirectory}");
-                exit();
-            }
-        }
-        
-        if (!is_dir($downloadCompleteDirectory)) {
-            if (!mkdir($downloadCompleteDirectory, 0777, true)) {
-                die("Failed to create complete download directory: {$downloadCompleteDirectory}");
-                exit();
-            }
-        }
         $i = 1;
         /*
          * CREATE FILE LIST
          */
-        $fileList = $downloadTemporaryDirectory.DIRECTORY_SEPARATOR.$this->uniqid."_list.txt";
+        $fileList = $this->temporaryFileDirectory."list.txt";
         /*
          * FILE TO DELETE
          */
@@ -263,7 +240,7 @@ class DownloadFile
              */
             $ch = curl_init();
             $fileName = $quality[0].strval($i++).".ts";
-            $destination = $downloadTemporaryDirectory.DIRECTORY_SEPARATOR.$this->uniqid."_".$fileName;
+            $destination = $this->temporaryFileDirectory.$fileName;
             $url = $filesURL.$fileName;
             self::log(__METHOD__."() FILE URL:".PHP_EOL.$url);
             /*
@@ -297,7 +274,6 @@ class DownloadFile
             $info = curl_getinfo($ch);
 
             if (curl_errno($ch)) {
-
                 self::log(__METHOD__."() cURL ERROR:".PHP_EOL.curl_error($ch));
                 $curlError = true;
                 break;
@@ -330,7 +306,7 @@ class DownloadFile
 
         }
         self::log(__METHOD__."() MERGE");
-        $command = "ffmpeg -loglevel quiet -f concat -safe 0 -i ".escapeshellarg($fileList)." -c copy ".escapeshellarg($downloadCompleteDirectory.DIRECTORY_SEPARATOR.$title."_".$this->uniqid.".mp4");
+        $command = "ffmpeg -loglevel quiet -f concat -safe 0 -i ".escapeshellarg($fileList)." -c copy ".escapeshellarg($this->completeFileDirectory.$title."_".$this->uniqid.".mp4");
         //$command = "ffmpeg -f concat -safe 0 -i ".escapeshellarg($fileList)." -c copy ".escapeshellarg($downloadCompleteDirectory.DIRECTORY_SEPARATOR.$title."_".$this->uniqid.".mp4");
         $output = shell_exec($command);
 
@@ -352,7 +328,6 @@ class DownloadFile
             error_log("Failed to write to file: {$fileListPath}"); // Log error internally
             return false;
         }
-        
         return true;
     }
     
@@ -362,28 +337,70 @@ class DownloadFile
         foreach($toDelete as $del){
             unlink($del);
         }
+        if(!rmdir($this->temporaryFileDirectory))
+        {
+            self::log(__METHOD__."() FAILED TO REMOVE DIRECTORY `".$this->temporaryFileDirectory."`");
+        }
     }
 
-    private function createLogDirectory()
+    private function createLogDirectory():void
     {
         $this->logDirectory=__DIR__.DIRECTORY_SEPARATOR.'log';
-        
-        $result = true;
-        
-        if (!file_exists($this->logDirectory)) {
-            $result = mkdir($this->logDirectory, 0777, true);
-        }
-
-        if(!$result || !is_dir($this->logDirectory)){
-            echo "[".$this->uniqid."] ".__METHOD__."() ERROR LOG DIR\r\n";
-            exit();
-        }
-        $this->logFile = $this->logDirectory.DIRECTORY_SEPARATOR.'output_'.$this->uniqid.'.log';
+        /*
+         * CREATE DIRECTORY
+         */
+        self::createDirectory($this->logDirectory);
+    }
+    
+    private function createCompleteFileDirectory():void
+    {
+        $this->completeFileDirectory=__DIR__.DIRECTORY_SEPARATOR.'complete';
+        /*
+         * CREATE DIRECTORY
+         */
+        self::createDirectory($this->completeFileDirectory);
+        $this->completeFileDirectory.=DIRECTORY_SEPARATOR;
     }
 
-    private function log(string $log='')
+    private function createTemporaryFileDirectory():void
+    {
+        $this->temporaryFileDirectory=__DIR__.DIRECTORY_SEPARATOR.'temporary';
+        /*
+         * CREATE DIRECTORY
+         */
+        self::createDirectory($this->temporaryFileDirectory);
+        $this->temporaryFileDirectory.=DIRECTORY_SEPARATOR.$this->uniqid;
+        /*
+         * CREATE UNIQUE TEMPORARY DIRECTORY
+         */
+        self::createDirectory($this->temporaryFileDirectory);
+        $this->temporaryFileDirectory.=DIRECTORY_SEPARATOR;
+    }
+
+    private function createDirectory(string $directoryName=''):void
+    {
+        $result = true;
+        if (!file_exists($directoryName)) {
+            $result = mkdir($directoryName, 0777, true);
+        }
+        if(!$result || !is_dir($directoryName)){
+            echo "[".$this->uniqid."] ".__METHOD__."() ERROR CREATE DIRECTORY ".$directoryName."\r\n";
+            exit();
+        }
+    }
+    
+    private function log(string $log=''):void
     {
         file_put_contents($this->logFile, "[".$this->uniqid."] ".$log.PHP_EOL, FILE_APPEND);
+    }
+    
+    private function createLogFile():void
+    {
+        $date = date("Y-m-d_H-i-s");     
+        $this->logFile = $this->logDirectory.DIRECTORY_SEPARATOR.'output_'.$date.'_'.$this->uniqid.'.log';
+        $file = fopen($this->logFile, "w") or die("Unable to open file!");
+        fwrite($file, "");
+        fclose($file);
     }
 }
 
