@@ -93,7 +93,7 @@ class downloadMulti {
     private function checkSapi()
     {
         $sapi = php_sapi_name();
-        //echo __METHOD__."() `".$sapi."`";
+        echo __METHOD__."() `".$sapi."`";
         
         $setup = [
             'cli'=> [
@@ -103,6 +103,10 @@ class downloadMulti {
             ,'apache2handler'=>[
                 'newline'=> '<br/>'
                 ,'shownotify'=>'showWWWNotify'
+            ]
+            ,'fpm-fcgi'=>[
+                'newline'=> '<br/>'
+                ,'shownotify'=>'showWWWNotify' 
             ]
         ];
         
