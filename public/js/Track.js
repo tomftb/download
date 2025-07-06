@@ -5,11 +5,14 @@ Track = function(){
     var xhr;
     
     var counter = 0;
+    
+    var uidList;
 
     window.addEventListener("load", (event) => {
         console.log("page is fully loaded");
         timer = setInterval(myTimer, 1000);
         xhr = setInterval(loadXMLDoc, 1000);
+        setUidList();
     });
 
     function myTimer() {
@@ -23,18 +26,22 @@ Track = function(){
     }
     
     function loadXMLDoc() {
-        var xhttp = new XMLHttpRequest();
-        xhttp.onreadystatechange = function() {
-          if (this.readyState == 4 && this.status == 200) {
-            let response = getResponse(this.responseText);
-            document.getElementById("response").innerHTML = response;
-            if(response === 'FINISH' || response === 'ERROR'){
-                clearInterval(xhr);
-            }
-          }
-        };
-        xhttp.open("GET", "/status.php", true);
-        xhttp.send();
+        for(const prop in uidList ){
+            console.log('Track().loadXMLDoc() check - ',uidList[prop]);
+            var xhttp = new XMLHttpRequest();
+            xhttp.onreadystatechange = function() {
+              if (this.readyState == 4 && this.status == 200) {
+                let response = getResponse(this.responseText);
+                document.getElementById("response").innerHTML = response;
+                if(response === 'FINISH' || response === 'ERROR'){
+                    clearInterval(xhr);
+                }
+              }
+            };
+            xhttp.open("GET", "/status.php?uid="+uidList[prop], true);
+            xhttp.send();
+        }
+        
     }
     
     function getResponse(responseText)
@@ -64,5 +71,12 @@ Track = function(){
         }
         return "ERROR";
     }
-    
+
+    function setUidList()
+    {
+        console.log(window.uid_list);
+        uidList = window.uid_list;
+        console.log(window.uid_list[0]);
+    }
+
 }();

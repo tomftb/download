@@ -7,7 +7,7 @@ require_once(APP_ROOT."core.php");
 require_once(APP_ROOT."Progress.php");
 $uid = filter_input(INPUT_GET,'uid');
 if($uid === null ){
-    echo json_encode(['success' => true,'message'=>"empty uid"]);
+    echo json_encode(['success' => false,'message'=>"empty uid"]);
     exit();
 }
 $argc = 3;

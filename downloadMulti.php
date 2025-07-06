@@ -10,6 +10,7 @@ class downloadMulti {
     private string $run='runWindows';// runLinux
     private string $uniqid='';
     private string $newLine = PHP_EOL;
+    private string $showNotify='showCliNotify';
 
     public function __construct() {
         $this->uniqid = uniqid();
@@ -19,14 +20,15 @@ class downloadMulti {
 
     public function download()
     {
-        self::readFile();
         self::checkSapi();
+        self::readFile();
     }
 
     private function readFile()
     {
         $i=0;
         $filePath = __DIR__.DIRECTORY_SEPARATOR.$this->filename; // Replace with the actual path to your file
+        $uidList=[];
         if (!file_exists($filePath)) {
             die("Error: The file '$filePath' does not exist.");
         }
@@ -37,11 +39,13 @@ class downloadMulti {
                 $escaped_command = escapeshellcmd($command);
                 $escaped_arg = preg_replace('/\s+/', ' ',escapeshellarg($line));
                 $escaped_arg_2 = strval(time()). uniqid();
+                $uidList[] = $escaped_arg_2;
                 self::{$this->run}($escaped_command,$escaped_arg,$escaped_arg_2,strval($i));
                 $i++;
             }
             fclose($handle);
             //echo __METHOD__."() END OF START".$this->newLine;
+            self::{$this->showNotify}($uidList);
         } 
         else {
             //echo "Error: Could not open the file '$filePath'.";
@@ -88,15 +92,35 @@ class downloadMulti {
         //echo __METHOD__."() `".$sapi."`";
         
         $setup = [
-            'cli'=> PHP_EOL
-            ,'apache2handler'=>'<br/>'
+            'cli'=> [
+                'newline'=> PHP_EOL
+                ,'shownotify'=>'showCliNotify'
+            ]
+            ,'apache2handler'=>[
+                'newline'=> '<br/>'
+                ,'shownotify'=>'showWWWNotify'
+            ]
         ];
         
         if(array_key_exists($sapi, $setup)){
-            $this->newLine = $setup[$sapi];
+            $this->newLine = $setup[$sapi]['newline'];
+            $this->showNotify = $setup[$sapi]['shownotify'];
             //echo __METHOD__."() SET - ".$sapi.$this->newLine;
         }
     }
+
+    private function showWWWNotify(array $uidLid=[]):void
+    {
+        echo __METHOD__."()<BR/>";
+        echo "<p id=\"uid_list\">".json_encode($uidLid)."</p>";
+        echo "<script>window.uid_list = ".json_encode($uidLid)."</script>";
+    }
+
+    private function showCliNotify(array $uidLid=[]):void
+    {
+        echo __METHOD__."()\r\n";
+    }
+
 }
 
 $downloadFile = new downloadMulti();
