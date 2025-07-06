@@ -34,7 +34,9 @@ class downloadMulti {
                 $command = __DIR__.DIRECTORY_SEPARATOR.'download.php';
                 $escaped_command = escapeshellcmd($command);
                 $escaped_arg = escapeshellarg($line);
-                self::{$this->run}($escaped_command,$escaped_arg,strval($i));
+                //$escaped_arg_2 = escapeshellarg(" show");
+                $escaped_arg_2 = "show";
+                self::{$this->run}($escaped_command,$escaped_arg,$escaped_arg_2,strval($i));
                 $i++;
             }
             fclose($handle);
@@ -44,19 +46,21 @@ class downloadMulti {
         }
     }
 
-    private function runWindows(string $cmd='', string $arg='', string $i='0')
+    private function runWindows(string $cmd='', string $arg='',string $arg2='', string $i='0')
     {
         echo "[".$this->uniqid."] ".__METHOD__."() ".$i."\r\n";
         echo $cmd."\r\n";
         echo $arg."\r\n";
+        echo $arg2."\r\n";
         //$outputLog = __DIR__.DIRECTORY_SEPARATOR.'output_'. uniqid().'.log'; // Where the script's output will go
-        pclose(popen("start /B php -f ". $cmd .' '.$arg, "r"));  
+        pclose(popen("start /B php -f ". $cmd ." ".$arg." ".$arg2." ", "r")); 
+        //pclose(popen("start /B php -f ". $cmd ." ".$arg." ".$arg2, "r")); 
     }
 
-    private function runLinux(string $cmd='', string $arg='', string $i='0')
+    private function runLinux(string $cmd='', string $arg='',string $arg2='', string $i='0')
     {
         echo "[".$this->uniqid."] ".__METHOD__."() ".$i."\r\n";
-        exec("php -f ".$cmd . " ".$arg." > /dev/null &");   
+        exec("php -f ".$cmd . " ".$arg." ".$arg2." > /dev/null &");   
     }
 
     private function setEnvironment() {
@@ -75,4 +79,4 @@ class downloadMulti {
 
 $downloadFile = new downloadMulti();
 
-$downloadFile->download($argv);
+$downloadFile->download();

@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Description of Progress
  *
@@ -54,7 +53,7 @@ class Progress {
     private function checkDirectory(string $dir='')
     {
         if (!file_exists($dir)) {
-            header('Content-Type: application/json; charset=utf-8');
+            //header('Content-Type: application/json; charset=utf-8');
             echo json_encode(['success' => false,'message'=>"directory not exists"]);
             /*
              * FILE NOT EXISTS
@@ -81,10 +80,9 @@ class Progress {
         $count = count($files)-2;
         //var_dump($files);
         //var_dump($count);
-        header('Content-Type: application/json; charset=utf-8');
+        //header('Content-Type: application/json; charset=utf-8');
         echo json_encode(['success' => true,'message'=>"files - ".strval($count)]);
     }
 }
 
 $progress = new Progress();
-$progress->run($argc,$argv);

@@ -21,6 +21,7 @@ class DownloadFile
     private bool $statusFileListToDelete = false;
     private array $toDelete = [];
     private \CurlHandle $curlHandle;
+    private $executeNotify;
     
     public function __construct()
     {
@@ -35,6 +36,7 @@ class DownloadFile
     public function download(?array $argv=[])
     {
         self::log(__METHOD__."()");
+        self::log(serialize(func_get_args()));
 	if($argv === null){
             self::log(__METHOD__."() SCRIPT ERROR:".PHP_EOL.": argv === null");
             exit();
@@ -43,6 +45,8 @@ class DownloadFile
             self::log(__METHOD__."() SCRIPT ERROR:".PHP_EOL." SET URL AS AN ARGUMENT OF SCRIPT");
             exit();
 	}
+        self::enableNotify($argv);
+        ($this->executeNotify)($this->uniqid);
         /*
          * SET URL
          */
@@ -456,6 +460,20 @@ class DownloadFile
         }
         if($info['content_type'] !== 'video/mp2t'){
             Throw New \Exception(__METHOD__."() cURL `".$info['url']."` WRONG CONTNET TYPE:".PHP_EOL.$info['content_type']);
+        }
+    }
+    
+    private function enableNotify(array $argv=[]):void
+    {
+        $this->executeNotify = function(){};
+        if(array_key_exists(2,$argv)){
+            self::log(__METHOD__."() SHOW PROGRESS - ON");
+            $this->executeNotify = function(string $message=''){
+                echo json_encode(['success' => true,'message'=>$message]);
+            };
+	}
+        else{
+            self::log(__METHOD__."() SHOW PROGRESS - OFF");
         }
     }
 }

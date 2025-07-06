@@ -1,50 +1,65 @@
 <?php
-$appRoot = substr(__DIR__,0,strlen(__DIR__) - 6);
-session_save_path($appRoot."tmp");
-session_start();
+define("DR",filter_input(INPUT_SERVER,"DOCUMENT_ROOT"));
+define("APP_ROOT",substr(DR,0,strlen(__DIR__) - 6));
+require_once(APP_ROOT."core.php");
+session_save_path(TMP);
+if (session_status() == PHP_SESSION_NONE) {
+    session_name('app_download');
+    session_start();
+}
+echo '<!DOCTYPE html>'
+    .'<html>'
+    .'<head>'
+    .'<link rel="shortcut icon" href="">'
+    .'<script src="/js/Track.js?v='.Library\File::getMd5(APP_ROOT.'public'.DS.'js'.DS.'Track.js').'"></script>'
+    . '</head>'
+    . '<body>';
 
-echo session_id()."<br/>";
-echo __FILE__."<br/>";
+echo "<p> SESSION ID - ".session_id()."</p>";
+echo "<p> TIME - <span id=\"time\"></span></p>";
+echo "<p> RESPONSE - <span id=\"response\"></span></p>";
 
 $token = $_SESSION['_csrf_token'];
 
 echo "TOKEN - ".$_SESSION['_csrf_token']."<br/>";
 $date = date("Y.m.d h:i:sa");
-file_put_contents("session.log", __FILE__."[".__LINE__."] [".$date."] TOKEN - ".$token.PHP_EOL,FILE_APPEND);
 
+\Library\Session::save(__FILE__."[".__LINE__."] [".$date."] TOKEN - ".$token.PHP_EOL);
 
-if(empty($_POST)){
+$post = filter_input_array(INPUT_POST);
+
+if(empty($post)){
     echo "empty post<br/>";
     die();
 }
 
 echo "not empty post<br/>";
 
-file_put_contents("session.log", __FILE__."[".__LINE__."] [".$date."] POST TOKEN - ".$_POST['_csrf_token'].PHP_EOL,FILE_APPEND);
+\Library\Session::save( __FILE__."[".__LINE__."] [".$date."] POST TOKEN - ".$post['_csrf_token'].PHP_EOL);
 
 if(!hash_equals(
     $_SESSION['_csrf_token']
-    , $_POST['_csrf_token'])
+    , $post['_csrf_token'])
 )
 {
-    echo "POST: <pre>"; var_dump($_POST); echo "</pre>";
+    echo "POST: <pre>"; var_dump($post); echo "</pre>";
     echo "SESSION: <pre>"; var_dump($_SESSION); echo "</pre>";
     echo ('CSRF attack detected!');
 }
 else{
     echo "ok<br/>";
     //$links = preg_split("/http:\/\//i",$_POST['url'])
-    $links = explode('https://',strtolower($_POST['url']));
-echo "<pre>"; var_dump($links); echo "</pre>";
-    file_put_contents($appRoot."links.txt", '');
+    $links = explode('https://',strtolower($post['url']));
+    echo "<pre>"; var_dump($links); echo "</pre>";
+    file_put_contents(APP_ROOT."links.txt", '');
     foreach($links as $link){
         if(!empty($link)){
-            file_put_contents($appRoot."links.txt","https://".$link.PHP_EOL,FILE_APPEND);
+            file_put_contents(APP_ROOT."links.txt","https://".$link.PHP_EOL,FILE_APPEND);
         }
     }
-    include_once($appRoot."downloadMulti.php");
+    include_once(APP_ROOT."downloadMulti.php");
 }
-echo "<pre>"; var_dump($_POST); echo "</pre>";
+echo "<pre>"; var_dump($post); echo "</pre>";
 //session_destroy();
 
-
+echo '</body></html>';

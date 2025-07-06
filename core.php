@@ -1,0 +1,27 @@
+<?php
+if(!defined("DS")){
+    define("DS",DIRECTORY_SEPARATOR);
+}
+if(!defined("DR")){
+    define("DR",filter_input(INPUT_SERVER,"DOCUMENT_ROOT"));
+}
+if(!defined("APP_ROOT")){
+    define("APP_ROOT",substr(DR,0,strlen(__DIR__) - 6));
+}
+if(!defined("TMP")){
+    define("TMP",APP_ROOT."tmp");
+}
+if(!defined("LOG_DIRECTORY")){
+    define("LOG_DIRECTORY",APP_ROOT."log");
+}
+if(!defined("COMPLETE_DIRECTORY")){
+    define("COMPLETE_DIRECTORY",APP_ROOT."complete".DS);
+}
+if(!defined("TEMPORARY_DIRECTORY")){
+    define("TEMPORARY_DIRECTORY",APP_ROOT."temporary".DS);
+}
+require_once(APP_ROOT."Library".DS."Directory.php");
+require_once(APP_ROOT."Library".DS."File.php");
+require_once(APP_ROOT."Library".DS."Session.php");
+\Library\Directory::create(TMP,true);
+\Library\Session::create(LOG_DIRECTORY,true);
