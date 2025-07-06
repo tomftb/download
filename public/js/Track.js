@@ -29,7 +29,7 @@ Track = function(){
     {
         console.log(window.uid_list);
         const list = window.uid_list;
-        console.log(window.uid_list[0]);
+
         let div = document.getElementById("response");
         
         let xhr = function loadXMLDoc(prop) {
