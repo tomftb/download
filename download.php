@@ -59,6 +59,9 @@ class DownloadFile
 	$body = $response->getBody("<script>");
 	self::readDOM($body);
         self::log(__METHOD__."() FILES DOWNLOADED - ".strval($this->filesDownloaded));
+        if($this->filesDownloaded === 0){
+            self::clean();
+        }
     }
 
     public function download2(?array $argv=[])
@@ -117,32 +120,33 @@ class DownloadFile
     }
 
     private function readScripts(string $title='')
-	{
-            self::log(__METHOD__."()");
-            $found = false;
-		$scripts = $this->dom->getElementsByTagName('script');
+    {
+        self::log(__METHOD__."()");
+        $found = false;
+        $scripts = $this->dom->getElementsByTagName('script');
 		
-		foreach ($scripts as $script) {
-			$content = $script->nodeValue;
-			$src = $script->getAttribute('src');
-    
-			if (!empty($src)) {
-				//echo "External script: " . $src . "\n";
-			} else {
-				//echo "Inline script content:\n" . trim($content) . "\n\n";
-				$found = self::lookForHlsM3u8( trim($content), trim($title));
-			}
-                        if($found){
-                            break;
-                        }
-		}
+	foreach ($scripts as $script) {
+            $content = $script->nodeValue;
+            $src = $script->getAttribute('src');
+            if (!empty($src)) {
+                //echo "External script: " . $src . "\n";
+            }
+            else {
+		//echo "Inline script content:\n" . trim($content) . "\n\n";
+		$found = self::lookForHlsM3u8( trim($content), trim($title));
+            }
+            if($found){
+                break;
+            }
 	}
+    }
 	
     private function lookForHlsM3u8(string $content='', string $title='')
     {
         self::log(__METHOD__."()");
 	$test = explode('setVideoHLS(\'',$content);
 	if(!array_key_exists(1,$test)){
+            self::log(__METHOD__."() KEY `setVideoHLS(` NOT FOUND");
             return;
 	}
 	$output_array = [];
@@ -156,6 +160,7 @@ class DownloadFile
 	}
 	}
 	if($m3u8 === null){
+            self::log(__METHOD__."() NOT FOUND");
             return false;
 	}
 	//echo $m3u8;

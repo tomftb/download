@@ -2,8 +2,9 @@
 define("DR",filter_input(INPUT_SERVER,"DOCUMENT_ROOT"));
 define("APP_ROOT",substr(DR,0,strlen(__DIR__) - 6));
 require_once(APP_ROOT."core.php");
-session_save_path(TMP);
+
 if (session_status() == PHP_SESSION_NONE) {
+    session_save_path(TMP);
     session_name('app_download');
     session_start();
 }

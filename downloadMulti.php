@@ -93,8 +93,6 @@ class downloadMulti {
     private function checkSapi()
     {
         $sapi = php_sapi_name();
-        echo __METHOD__."() `".$sapi."`";
-        
         $setup = [
             'cli'=> [
                 'newline'=> PHP_EOL
@@ -119,6 +117,22 @@ class downloadMulti {
 
     private function showWWWNotify(array $uidLid=[]):void
     {
+        if(!defined('DR')){
+            define("DR",filter_input(INPUT_SERVER,"DOCUMENT_ROOT"));
+        }
+        if(!defined('APP_ROOT')){
+            define("APP_ROOT",substr(DR,0,strlen(__DIR__) - 6));
+        }
+        
+        require_once(APP_ROOT."core.php");
+        if (session_status() == PHP_SESSION_NONE) {
+            session_save_path(TMP);
+            session_name('app_download');
+            session_start();
+        }
+        foreach($uidLid as $uid){
+            setcookie($uid, "test", time()+3600);  /* expire in 1 hour */
+        }
         echo __METHOD__."()<BR/>";
         echo "<p id=\"uid_list\">".json_encode($uidLid)."</p>";
         echo "<script>window.uid_list = ".json_encode($uidLid)."</script>";
@@ -126,7 +140,7 @@ class downloadMulti {
 
     private function showCliNotify(array $uidLid=[]):void
     {
-        echo __METHOD__."()\r\n";
+        //echo __METHOD__."()\r\n";
     }
 
 }

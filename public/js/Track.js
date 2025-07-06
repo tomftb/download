@@ -36,8 +36,9 @@ Track = function(){
             try{
                 let getResponse = function (responseText)
                 {
-                        const obj = JSON.parse(responseText);
-
+                    console.log(responseText);
+                    const obj = JSON.parse(responseText);
+                        console.log(obj);
                         if(!obj.hasOwnProperty('success')){
                             throw new Error("ERROR");
                         }

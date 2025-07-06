@@ -16,7 +16,7 @@ class Progress {
         self::checkArg($argc,$argv);
         $this->dir = $argv[1];
         self::checkCompleteDirectory($argv[2],$argv[3]);
-        self::checkTemporaryDirectory($argv[1]);
+        self::checkTemporaryDirectory($argv[1],$argv[3]);
         //printf("%s".PHP_EOL,__METHOD__);
         self::showResult($argv[1],$argv[3]);
     }
@@ -58,9 +58,9 @@ class Progress {
 	}
     }
 
-    private function checkTemporaryDirectory(string $dir='')
+    private function checkTemporaryDirectory(string $dir='',string $uid='')
     {        
-        self::checkDirectory($dir);
+        self::checkDirectory($dir,$uid);
     }
     
     private function showResult(string $dir='',string $uid='')
@@ -85,23 +85,25 @@ class Progress {
         }
     }
     
-    private function checkDirectory(string $dir=''):void
+    private function checkDirectory(string $dir='', string $uid = ''):void
     {
         if (!file_exists($dir)) {
             //header('Content-Type: application/json; charset=utf-8');
-            echo json_encode(['success' => false,'message'=>"directory `".$dir."` not exists"]);
+            echo json_encode(['success' => false,'message'=>'<b>['.$uid.']</b> DIRECTORY `'.$dir.'` NOT EXISTS']);
             /*
              * FILE NOT EXISTS
              */
             exit();
         }
         if(!is_dir($dir)){
+            echo json_encode(['success' => false,'message'=>"<b>[".$uid."]</b> NOT A DIRECTORY `".$dir."`"]);
             /*
              * NOT A DIRECTORY
              */
             exit();
         }
         if(!is_readable($dir)){
+            echo json_encode(['success' => false,'message'=>"<b>[".$uid."]</b> DIRECTORY `".$dir."` no read permission"]);
             /*
              * NO READ PERMISSIONS
              */
