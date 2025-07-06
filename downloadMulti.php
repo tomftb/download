@@ -13,7 +13,7 @@ class downloadMulti {
 
     public function __construct() {
         $this->uniqid = uniqid();
-        echo "[".$this->uniqid."] ".__METHOD__."()".$this->newLine;
+        //echo "[".$this->uniqid."] ".__METHOD__."()".$this->newLine;
         self::setEnvironment();
     }
 
@@ -41,44 +41,43 @@ class downloadMulti {
                 $i++;
             }
             fclose($handle);
-            echo __METHOD__."() END OF START".$this->newLine;
+            //echo __METHOD__."() END OF START".$this->newLine;
         } 
         else {
-            echo "Error: Could not open the file '$filePath'.";
+            //echo "Error: Could not open the file '$filePath'.";
         }
     }
 
     private function runWindows(string $cmd='', string $arg='',string $arg2='', string $i='0')
     {
-        echo "[".$this->uniqid."] ".__METHOD__."() ".$i.$this->newLine;
-        echo $cmd.$this->newLine;
-        echo $arg.$this->newLine;
-        echo $arg2.$this->newLine;
+        //echo "[".$this->uniqid."] ".__METHOD__."() ".$i.$this->newLine;
+        //echo $cmd.$this->newLine;
+        //echo $arg.$this->newLine;
+        //echo $arg2.$this->newLine;
         //$outputLog = __DIR__.DIRECTORY_SEPARATOR.'output_'. uniqid().'.log'; // Where the script's output will go
-        echo __METHOD__."() arg:<pre>";
-        $arg = preg_replace('/\s+/', ' ', $arg);
-        var_dump($arg);
-        var_dump($arg2);
-        echo "</pre>";
+        //echo __METHOD__."() arg:<pre>";
+        //var_dump($arg);
+        //var_dump($arg2);
+        //echo "</pre>";
         pclose(popen("start /B php -f ". $cmd ." ".$arg." ".$arg2." ", "r")); 
         //pclose(popen("start /B php -f ". $cmd ." ".$arg." ".$arg2, "r")); 
     }
 
     private function runLinux(string $cmd='', string $arg='',string $arg2='', string $i='0')
     {
-        echo "[".$this->uniqid."] ".__METHOD__."() ".$i.$this->newLine;
+        //echo "[".$this->uniqid."] ".__METHOD__."() ".$i.$this->newLine;
         exec("php -f ".$cmd . " ".$arg." ".$arg2." > /dev/null &");   
     }
 
     private function setEnvironment() {
 
         if (substr(php_uname(), 0, 7) == "Windows"){
-            echo "[".$this->uniqid."] ".__METHOD__."() WINDOWS".$this->newLine;
+            //echo "[".$this->uniqid."] ".__METHOD__."() WINDOWS".$this->newLine;
             $this->run ='runWindows';
         }
 
         else {
-            echo "[".$this->uniqid."] ".__METHOD__."() LINUX".$this->newLine;
+            //echo "[".$this->uniqid."] ".__METHOD__."() LINUX".$this->newLine;
             $this->run ='runLinux';
         }
     }
@@ -86,7 +85,7 @@ class downloadMulti {
     private function checkSapi()
     {
         $sapi = php_sapi_name();
-        echo __METHOD__."() `".$sapi."`";
+        //echo __METHOD__."() `".$sapi."`";
         
         $setup = [
             'cli'=> PHP_EOL
@@ -95,7 +94,7 @@ class downloadMulti {
         
         if(array_key_exists($sapi, $setup)){
             $this->newLine = $setup[$sapi];
-            echo __METHOD__."() SET - ".$sapi.$this->newLine;
+            //echo __METHOD__."() SET - ".$sapi.$this->newLine;
         }
     }
 }
