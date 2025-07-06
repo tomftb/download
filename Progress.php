@@ -15,9 +15,10 @@ class Progress {
     {
         self::checkArg($argc,$argv);
         $this->dir = $argv[1];
-        self::checkDirectory($argv[1]);
+        self::checkCompleteDirectory($argv[2],$argv[3]);
+        self::checkTemporaryDirectory($argv[1]);
         //printf("%s".PHP_EOL,__METHOD__);
-        self::showResult($argv[1],$argv[2]);
+        self::showResult($argv[1],$argv[3]);
     }
     
     private function checkArg(int $argc=0,?array $argv=[])
@@ -37,24 +38,58 @@ class Progress {
 	}
 	if(!array_key_exists(1,$argv)){
             /*
-             * SET SCRIPT ARGUMENT 1 - DIRECTORY
+             * SET SCRIPT ARGUMENT 1 - TEMPORARY DIRECTORY
              */
             exit();
 	}
 
         if(!array_key_exists(2,$argv)){
             /*
-             * SET SCRIPT ARGUMENT 2 - KEY
+             * SET SCRIPT ARGUMENT 2 - COMPLETE DIRECTORY
+             */
+            exit();
+	}
+
+        if(!array_key_exists(3,$argv)){
+            /*
+             * SET SCRIPT ARGUMENT 3 - FILE UID
              */
             exit();
 	}
     }
 
-    private function checkDirectory(string $dir='')
+    private function checkTemporaryDirectory(string $dir='')
+    {        
+        self::checkDirectory($dir);
+    }
+    
+    private function showResult(string $dir='',string $uid='')
+    {
+        $files = scandir($dir);
+        $count = count($files)-2;
+        //var_dump($files);
+        //var_dump($count);
+        //header('Content-Type: application/json; charset=utf-8');
+        echo json_encode(['success' => true,'message'=>"<b>[".$uid."]</b> DOWNLOADED FILES - ".strval($count)]);
+    }
+    
+    private function checkCompleteDirectory(string $dir = '', string $uid = ''):void
+    {
+        self::checkDirectory($dir);
+        $files = scandir($dir);
+        foreach($files as $file){
+            if(preg_match("/.*".$uid.".mp4$/", $file)){
+                echo json_encode(['success' => false,'message'=>"<b>[".$uid."]</b> COMPLETE - ".$file]);
+                exit();
+            }
+        }
+    }
+    
+    private function checkDirectory(string $dir=''):void
     {
         if (!file_exists($dir)) {
             //header('Content-Type: application/json; charset=utf-8');
-            echo json_encode(['success' => false,'message'=>"directory not exists"]);
+            echo json_encode(['success' => false,'message'=>"directory `".$dir."` not exists"]);
             /*
              * FILE NOT EXISTS
              */
@@ -74,15 +109,6 @@ class Progress {
         }
     }
     
-    private function showResult(string $dir='',string $key='')
-    {
-        $files = scandir($dir);
-        $count = count($files)-2;
-        //var_dump($files);
-        //var_dump($count);
-        //header('Content-Type: application/json; charset=utf-8');
-        echo json_encode(['success' => true,'message'=>"files - ".strval($count)]);
-    }
 }
 
 $progress = new Progress();

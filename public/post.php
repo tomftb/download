@@ -17,26 +17,15 @@ echo '<!DOCTYPE html>'
 
 echo "<p> SESSION ID - ".session_id()."</p>";
 echo "<p> TIME - <span id=\"time\"></span></p>";
-echo "<p> RESPONSE - <span id=\"response\"></span></p>";
-
 $token = $_SESSION['_csrf_token'];
-
-echo "TOKEN - ".$_SESSION['_csrf_token']."<br/>";
 $date = date("Y.m.d h:i:sa");
-
 \Library\Session::save(__FILE__."[".__LINE__."] [".$date."] TOKEN - ".$token.PHP_EOL);
-
 $post = filter_input_array(INPUT_POST);
-
 if(empty($post)){
     echo "empty post<br/>";
     die();
 }
-
-echo "not empty post<br/>";
-
 \Library\Session::save( __FILE__."[".__LINE__."] [".$date."] POST TOKEN - ".$post['_csrf_token'].PHP_EOL);
-
 if(!hash_equals(
     $_SESSION['_csrf_token']
     , $post['_csrf_token'])
@@ -47,10 +36,9 @@ if(!hash_equals(
     echo ('CSRF attack detected!');
 }
 else{
-    echo "ok<br/>";
-    //$links = preg_split("/http:\/\//i",$_POST['url'])
+    echo "<p>DOWNLOAD LIST:</p>";
     $links = explode('https://',strtolower($post['url']));
-    echo "<pre>"; var_dump($links); echo "</pre>";
+    echo "<pre>"; print_r($links); echo "</pre>";
     file_put_contents(APP_ROOT."links.txt", '');
     foreach($links as $link){
         if(!empty($link)){
@@ -59,7 +47,6 @@ else{
     }
     include_once(APP_ROOT."downloadMulti.php");
 }
-echo "<pre>"; var_dump($post); echo "</pre>";
-//session_destroy();
-
+echo "<p style=\"font-weight:bold;\">PROGRESS: </p>";
+echo "<div id=\"response\"></div>";
 echo '</body></html>';

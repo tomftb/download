@@ -250,9 +250,9 @@ class DownloadFile
             /*
              * COUNT FILES
              */
-            while($curlError !== true){
-                self::countContent($curlError);
-            }
+            //while($curlError !== true){
+            //    self::countContent($curlError);
+            //}
             //echo $this->filesAvailable;
             $this->downloadIterator = 0;
             $curlError = false;
@@ -447,6 +447,7 @@ class DownloadFile
         // Optional: Handle SSL certificate issues (use with caution, better to fix certificate problems)
         // curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
         // curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+         curl_setopt($this->curlHandle, CURLOPT_SSL_VERIFYPEER, false);
     }
     
     private function checkCurlStatus()

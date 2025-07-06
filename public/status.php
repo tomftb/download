@@ -10,10 +10,16 @@ if($uid === null ){
     echo json_encode(['success' => false,'message'=>"empty uid"]);
     exit();
 }
+$uidType = gettype($uid);
+if($uidType !== 'string'){
+    echo json_encode(['success' => false,'message'=>"wrong uid type `".$uidType."`"]);
+    exit();   
+}
 $argc = 3;
 $argv = [
     0=> __FILE__
-    ,1=>TEMPORARY_DIRECTORY
-    ,2=>filter_input(INPUT_GET,'uid')
+    ,1=>TEMPORARY_DIRECTORY.$uid
+    ,2=>COMPLETE_DIRECTORY
+    ,3=>$uid
 ];
 $progress->run($argc,$argv);

@@ -35,6 +35,10 @@ class downloadMulti {
         $handle = fopen($filePath, 'r');
         if ($handle) {            
             while (($line = fgets($handle)) !== false) {
+                $line = preg_replace('/\s+/', '',$line);
+                if($line === ''){
+                    continue;
+                }
                 $command = __DIR__.DIRECTORY_SEPARATOR.'download.php';
                 $escaped_command = escapeshellcmd($command);
                 $escaped_arg = preg_replace('/\s+/', ' ',escapeshellarg($line));
