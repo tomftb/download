@@ -7,6 +7,7 @@ use GuzzleHttp\Client;
 class DownloadFile
 {
     private string $uniqid='';
+    private string $logUniqid='';
     private string $logDirectory='';
     private string $completeFileDirectory='';
     private string $temporaryFileDirectory='';
@@ -25,11 +26,12 @@ class DownloadFile
     
     public function __construct()
     {
-        $this->uniqid = uniqid();
         self::createLogDirectory();
-        self::createLogFile();
         self::createCompleteFileDirectory();
-        self::createTemporaryFileDirectory();
+        /*
+         * CREATE LOG FILE
+         */
+        self::createLogFile();
         $this->dom = new DOMDocument();
     }
 
@@ -37,16 +39,16 @@ class DownloadFile
     {
         self::log(__METHOD__."()");
         self::log(serialize(func_get_args()));
-	if($argv === null){
-            self::log(__METHOD__."() SCRIPT ERROR:".PHP_EOL.": argv === null");
-            exit();
-	}
-	if(!array_key_exists(1,$argv)){
-            self::log(__METHOD__."() SCRIPT ERROR:".PHP_EOL." SET URL AS AN ARGUMENT OF SCRIPT");
-            exit();
-	}
-        self::enableNotify($argv);
-        ($this->executeNotify)($this->uniqid);
+        self::checkFileArguments($argv);
+        /*
+         * SET UNIQID
+         */
+        self::setUniqid($argv);
+
+        /*
+         * SET TEMPORARY DOWNLOAD DIRECTORY
+         */
+        self::createTemporaryFileDirectory();
         /*
          * SET URL
          */
@@ -54,7 +56,6 @@ class DownloadFile
         self::log(__METHOD__."() URL:".PHP_EOL.$url);
 	$client = new Client();
 	$response = $client->request('GET', $url);
-
 	$body = $response->getBody("<script>");
 	self::readDOM($body);
         self::log(__METHOD__."() FILES DOWNLOADED - ".strval($this->filesDownloaded));
@@ -417,7 +418,7 @@ class DownloadFile
     private function createLogFile():void
     {
         $date = date("Y-m-d_H-i-s");     
-        $this->logFile = $this->logDirectory.DIRECTORY_SEPARATOR.'output_'.$date.'_'.$this->uniqid.'.log';
+        $this->logFile = $this->logDirectory.DIRECTORY_SEPARATOR.'output_'.$date.'_'.uniqid().'.log';
         $file = fopen($this->logFile, "w") or die("Unable to open file!");
         fwrite($file, "");
         fclose($file);
@@ -463,22 +464,41 @@ class DownloadFile
         }
     }
     
-    private function enableNotify(array $argv=[]):void
+    private function setUniqid(?array $argv=[]):void
     {
         $this->executeNotify = function(){};
         if(array_key_exists(2,$argv)){
-            self::log(__METHOD__."() SHOW PROGRESS - ON");
-            $this->executeNotify = function(string $message=''){
-                echo json_encode(['success' => true,'message'=>$message]);
-            };
+            self::log(__METHOD__."() SET EXTERNAL UNIQID");
+            $this->uniqid = $argv[2];
 	}
         else{
-            self::log(__METHOD__."() SHOW PROGRESS - OFF");
+            self::log(__METHOD__."() SET INTERNAL UNIQID");
+            $this->uniqid = strval(time()).uniqid();
         }
+        self::log(__METHOD__."() UNIQID - ".$this->uniqid);
+    }
+
+    private function checkFileArguments(?array $argv=[]):void
+    {
+        if($argv === null){
+            self::log(__METHOD__."() SCRIPT ERROR:".PHP_EOL.": argv === null");
+            exit();
+	}
+	if(!array_key_exists(1,$argv)){
+            self::log(__METHOD__."() SCRIPT ERROR:".PHP_EOL." SET URL AS AN ARGUMENT OF SCRIPT");
+            exit();
+	}
     }
 }
-
+/*
+ * CREATE OBJECT
+ */
 $downloadFile = new DownloadFile();
-
+/*
+ * EXECUTE download METHOD
+ */
 $downloadFile->download($argv);
+/*
+ * EXITS
+ */
 exit();

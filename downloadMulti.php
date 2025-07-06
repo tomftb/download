@@ -33,9 +33,8 @@ class downloadMulti {
             while (($line = fgets($handle)) !== false) {
                 $command = __DIR__.DIRECTORY_SEPARATOR.'download.php';
                 $escaped_command = escapeshellcmd($command);
-                $escaped_arg = escapeshellarg($line);
-                //$escaped_arg_2 = escapeshellarg(" show");
-                $escaped_arg_2 = "show";
+                $escaped_arg = preg_replace('/\s+/', ' ',escapeshellarg($line));
+                $escaped_arg_2 = strval(time()). uniqid();
                 self::{$this->run}($escaped_command,$escaped_arg,$escaped_arg_2,strval($i));
                 $i++;
             }
@@ -53,6 +52,11 @@ class downloadMulti {
         echo $arg."\r\n";
         echo $arg2."\r\n";
         //$outputLog = __DIR__.DIRECTORY_SEPARATOR.'output_'. uniqid().'.log'; // Where the script's output will go
+        echo __METHOD__."() arg:<pre>";
+        $arg = preg_replace('/\s+/', ' ', $arg);
+        var_dump($arg);
+        var_dump($arg2);
+        echo "</pre>";
         pclose(popen("start /B php -f ". $cmd ." ".$arg." ".$arg2." ", "r")); 
         //pclose(popen("start /B php -f ". $cmd ." ".$arg." ".$arg2, "r")); 
     }
