@@ -19,8 +19,8 @@ class Progress {
     {
         self::checkArg($argv);
         $this->uid = $argv[0];
-        self::checkComplete($argv[1]);
         self::checkProgress($argv[3]);
+        self::checkComplete($argv[1]);
         self::checkTemporaryDirectory($argv[2]);
         self::showResult($argv[2]);
     }
@@ -46,13 +46,12 @@ class Progress {
         self::checkDirectory($dir);
         $files = scandir($dir);
         foreach($files as $file){
-            if(preg_match("/.*".$this->uid.".mp4$/", $file)){
-                echo json_encode(['success' => false,'message'=>"<b>[".$this->uid."]</b> COMPLETE - ".$file]);
-                if($this->progressFilePath!==null){
-                    unlink($this->progressFilePath);
-                }
-                exit();
+            if(!preg_match("/.*".$this->uid.".mp4$/", $file)){
+                continue;
             }
+            self::removeProgressFile();
+            echo json_encode(['success' => false,'message'=>"<b>[".$this->uid."]</b> COMPLETE - ".$file]);
+            exit();
         }
     }
 
@@ -101,6 +100,16 @@ class Progress {
         $files = scandir($dir.$this->uid);
         $count = count($files)-2;
         echo json_encode(['success' => true,'message'=>"<b>[".$this->uid."]</b> DOWNLOADED FILES - ".strval($count).$this->max]);
+    }
+    
+    private function removeProgressFile():void
+    {
+        if($this->progressFilePath === null){
+            return;
+        }
+        if(!unlink($this->progressFilePath)){
+            error_log(__FILE__." ".__METHOD__."() FAILED UNLINK `".$this->progressFilePath."`");
+        }       
     }
 }
 
