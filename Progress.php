@@ -5,112 +5,103 @@
  * @author Tomasz
  */
 class Progress {
+
+    private string $uid = '';
+    private string $max = '';
+    private ?string $progressFilePath = null;
     
     public function __construct()
     {
     
     }
 
-    public function run(int $argc=0,?array $argv=[])
+    public function run(array $argv=[]):void
     {
-        self::checkArg($argc,$argv);
-        $this->dir = $argv[1];
-        self::checkCompleteDirectory($argv[2],$argv[3]);
-        self::checkTemporaryDirectory($argv[1],$argv[3]);
-        //printf("%s".PHP_EOL,__METHOD__);
-        self::showResult($argv[1],$argv[3]);
+        self::checkArg($argv);
+        $this->uid = $argv[0];
+        self::checkComplete($argv[1]);
+        self::checkProgress($argv[3]);
+        self::checkTemporaryDirectory($argv[2]);
+        self::showResult($argv[2]);
     }
     
-    private function checkArg(int $argc=0,?array $argv=[])
+    private function checkArg(array $argv=[])
     {
         //printf("ARGC:%d".PHP_EOL,$argc);
-        if($argc !== 3){
+        if(count($argv) !== 4){
             /*
-             * MISSING ARG 2 AND 3
+             * MISSING ARGS
              */
             exit();
         }
-        if($argv === null){
-            /*
-             *  argv === null          
-             */
-            exit();
-	}
-	if(!array_key_exists(1,$argv)){
-            /*
-             * SET SCRIPT ARGUMENT 1 - TEMPORARY DIRECTORY
-             */
-            exit();
-	}
-
-        if(!array_key_exists(2,$argv)){
-            /*
-             * SET SCRIPT ARGUMENT 2 - COMPLETE DIRECTORY
-             */
-            exit();
-	}
-
-        if(!array_key_exists(3,$argv)){
-            /*
-             * SET SCRIPT ARGUMENT 3 - FILE UID
-             */
-            exit();
-	}
     }
 
-    private function checkTemporaryDirectory(string $dir='',string $uid='')
-    {        
-        self::checkDirectory($dir,$uid);
-    }
-    
-    private function showResult(string $dir='',string $uid='')
+    private function checkTemporaryDirectory(string $dir='')
     {
-        $files = scandir($dir);
-        $count = count($files)-2;
-        //var_dump($files);
-        //var_dump($count);
-        //header('Content-Type: application/json; charset=utf-8');
-        echo json_encode(['success' => true,'message'=>"<b>[".$uid."]</b> DOWNLOADED FILES - ".strval($count)]);
+        self::checkDirectory($dir.$this->uid);
     }
-    
-    private function checkCompleteDirectory(string $dir = '', string $uid = ''):void
+
+    private function checkComplete(string $dir = ''):void
     {
         self::checkDirectory($dir);
         $files = scandir($dir);
         foreach($files as $file){
-            if(preg_match("/.*".$uid.".mp4$/", $file)){
-                echo json_encode(['success' => false,'message'=>"<b>[".$uid."]</b> COMPLETE - ".$file]);
+            if(preg_match("/.*".$this->uid.".mp4$/", $file)){
+                echo json_encode(['success' => false,'message'=>"<b>[".$this->uid."]</b> COMPLETE - ".$file]);
+                if($this->progressFilePath!==null){
+                    unlink($this->progressFilePath);
+                }
                 exit();
             }
         }
     }
-    
-    private function checkDirectory(string $dir='', string $uid = ''):void
+
+    private function checkProgress(string $dir = ''):void
+    {
+        self::checkDirectory($dir);
+        $tmp = $dir.$this->uid.".txt";
+        if(!file_exists($tmp)){
+            return;
+        }
+        if(!is_readable($tmp)){
+            return;
+        }
+        $this->progressFilePath = $tmp;
+        $this->max = " OF ".file_get_contents($tmp);
+    }
+
+    private function checkDirectory(string $dir=''):void
     {
         if (!file_exists($dir)) {
             //header('Content-Type: application/json; charset=utf-8');
-            echo json_encode(['success' => false,'message'=>'<b>['.$uid.']</b> DIRECTORY `'.$dir.'` NOT EXISTS']);
+            echo json_encode(['success' => false,'message'=>'<b>['.$this->uid.']</b> DIRECTORY `'.$dir.'` NOT EXISTS']);
             /*
              * FILE NOT EXISTS
              */
             exit();
         }
         if(!is_dir($dir)){
-            echo json_encode(['success' => false,'message'=>"<b>[".$uid."]</b> NOT A DIRECTORY `".$dir."`"]);
+            echo json_encode(['success' => false,'message'=>"<b>[".$this->uid."]</b> NOT A DIRECTORY `".$dir."`"]);
             /*
              * NOT A DIRECTORY
              */
             exit();
         }
         if(!is_readable($dir)){
-            echo json_encode(['success' => false,'message'=>"<b>[".$uid."]</b> DIRECTORY `".$dir."` no read permission"]);
+            echo json_encode(['success' => false,'message'=>"<b>[".$this->uid."]</b> DIRECTORY `".$dir."` no read permission"]);
             /*
              * NO READ PERMISSIONS
              */
             exit();  
         }
     }
-    
+
+    private function showResult(string $dir='')
+    {
+        $files = scandir($dir.$this->uid);
+        $count = count($files)-2;
+        echo json_encode(['success' => true,'message'=>"<b>[".$this->uid."]</b> DOWNLOADED FILES - ".strval($count).$this->max]);
+    }
 }
 
 $progress = new Progress();

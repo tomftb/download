@@ -11,6 +11,7 @@ class downloadMulti {
     private string $uniqid='';
     private string $newLine = PHP_EOL;
     private string $showNotify='showCliNotify';
+    private ?string $progressDirectory = null;
 
     public function __construct() {
         $this->uniqid = uniqid();
@@ -21,17 +22,31 @@ class downloadMulti {
     public function download()
     {
         self::checkSapi();
+        self::checkProgressDirectory();
         self::readFile();
     }
 
     private function readFile()
     {
-        $i=0;
         $filePath = __DIR__.DIRECTORY_SEPARATOR.$this->filename; // Replace with the actual path to your file
         $uidList=[];
         if (!file_exists($filePath)) {
             die("Error: The file '$filePath' does not exist.");
         }
+        /*
+         * CHECK PROGREESS DIRECTORY
+         */
+        $setProgress = function(){
+            return '';
+        };
+        if($this->progressDirectory!==null){
+            $setProgress = function(string $uid=''){
+                $dir = $this->progressDirectory.$uid.".txt";
+                file_put_contents($dir, 0);
+                return $dir;
+            };
+        }
+        
         $handle = fopen($filePath, 'r');
         if ($handle) {            
             while (($line = fgets($handle)) !== false) {
@@ -44,11 +59,10 @@ class downloadMulti {
                 $escaped_arg = preg_replace('/\s+/', ' ',escapeshellarg($line));
                 $escaped_arg_2 = strval(time()). uniqid();
                 $uidList[] = $escaped_arg_2;
-                self::{$this->run}($escaped_command,$escaped_arg,$escaped_arg_2,strval($i));
-                $i++;
+                $progressDir = $setProgress($escaped_arg_2);
+                self::{$this->run}($escaped_command,$escaped_arg,$escaped_arg_2,$progressDir);
             }
             fclose($handle);
-            //echo __METHOD__."() END OF START".$this->newLine;
             self::{$this->showNotify}($uidList);
         } 
         else {
@@ -56,25 +70,14 @@ class downloadMulti {
         }
     }
 
-    private function runWindows(string $cmd='', string $arg='',string $arg2='', string $i='0')
+    private function runWindows(string $cmd='', string $arg='',string $arg2='',string $arg3='')
     {
-        //echo "[".$this->uniqid."] ".__METHOD__."() ".$i.$this->newLine;
-        //echo $cmd.$this->newLine;
-        //echo $arg.$this->newLine;
-        //echo $arg2.$this->newLine;
-        //$outputLog = __DIR__.DIRECTORY_SEPARATOR.'output_'. uniqid().'.log'; // Where the script's output will go
-        //echo __METHOD__."() arg:<pre>";
-        //var_dump($arg);
-        //var_dump($arg2);
-        //echo "</pre>";
-        pclose(popen("start /B php -f ". $cmd ." ".$arg." ".$arg2." ", "r")); 
-        //pclose(popen("start /B php -f ". $cmd ." ".$arg." ".$arg2, "r")); 
+        pclose(popen("start /B php -f ". $cmd ." ".$arg." ".$arg2." ".$arg3." ", "r")); 
     }
 
-    private function runLinux(string $cmd='', string $arg='',string $arg2='', string $i='0')
+    private function runLinux(string $cmd='', string $arg='',string $arg2='',string $arg3='')
     {
-        //echo "[".$this->uniqid."] ".__METHOD__."() ".$i.$this->newLine;
-        exec("php -f ".$cmd . " ".$arg." ".$arg2." > /dev/null &");   
+        exec("php -f ".$cmd . " ".$arg." ".$arg2." ".$arg3." > /dev/null &");   
     }
 
     private function setEnvironment() {
@@ -143,6 +146,17 @@ class downloadMulti {
         //echo __METHOD__."()\r\n";
     }
 
+    private function checkProgressDirectory()
+    {
+        if(defined("PROGRESS_DIRECTORY")){
+            echo "DEFINED APPLICATION CONST PROGRESS_DIRECTORY".$this->newLine;
+            $this->progressDirectory = PROGRESS_DIRECTORY;
+        }
+        else{
+            echo "DEFINED APPLICATION CONST PROGRESS_DIRECTORY".$this->newLine;
+            $this->progressDirectory = null;
+        }
+    }
 }
 
 $downloadFile = new downloadMulti();

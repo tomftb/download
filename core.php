@@ -20,8 +20,12 @@ if(!defined("COMPLETE_DIRECTORY")){
 if(!defined("TEMPORARY_DIRECTORY")){
     define("TEMPORARY_DIRECTORY",APP_ROOT."temporary".DS);
 }
+if(!defined("PROGRESS_DIRECTORY")){
+    define("PROGRESS_DIRECTORY",APP_ROOT."progress".DS);
+}
 require_once(APP_ROOT."Library".DS."Directory.php");
 require_once(APP_ROOT."Library".DS."File.php");
 require_once(APP_ROOT."Library".DS."Session.php");
 \Library\Directory::create(TMP,true);
+\Library\Directory::create(PROGRESS_DIRECTORY,true);
 \Library\Session::create(LOG_DIRECTORY,true);

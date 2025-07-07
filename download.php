@@ -22,8 +22,8 @@ class DownloadFile
     private bool $statusFileListToDelete = false;
     private array $toDelete = [];
     private \CurlHandle $curlHandle;
-    private $executeNotify;
-    
+    private ?string $saveProgressPath = null;
+
     public function __construct()
     {
         self::createLogDirectory();
@@ -44,7 +44,10 @@ class DownloadFile
          * SET UNIQID
          */
         self::setUniqid($argv);
-
+        /*
+         * SET PROGRESS FILE
+         */
+        self::setProgressFile($argv);
         /*
          * SET TEMPORARY DOWNLOAD DIRECTORY
          */
@@ -255,10 +258,14 @@ class DownloadFile
             /*
              * COUNT FILES
              */
-            //while($curlError !== true){
-            //    self::countContent($curlError);
-            //}
-            //echo $this->filesAvailable;
+            if($this->saveProgressPath!==null){
+                while($curlError !== true){
+                    self::countContent($curlError);
+                }
+                file_put_contents($this->saveProgressPath, $this->filesAvailable);
+            }
+
+
             $this->downloadIterator = 0;
             $curlError = false;
             /*
@@ -472,7 +479,6 @@ class DownloadFile
     
     private function setUniqid(?array $argv=[]):void
     {
-        $this->executeNotify = function(){};
         if(array_key_exists(2,$argv)){
             self::log(__METHOD__."() SET EXTERNAL UNIQID");
             $this->uniqid = $argv[2];
@@ -494,6 +500,17 @@ class DownloadFile
             self::log(__METHOD__."() SCRIPT ERROR:".PHP_EOL." SET URL AS AN ARGUMENT OF SCRIPT");
             exit();
 	}
+    }
+
+    private function setProgressFile(?array $argv=[]):void
+    {
+        if(array_key_exists(3,$argv)){
+            self::log(__METHOD__."() SET PROGRESS FILE");
+            $this->saveProgressPath = $argv[3];
+	}
+        else{
+            self::log(__METHOD__."() NO PROGRESS FILE");
+        }
     }
 }
 /*

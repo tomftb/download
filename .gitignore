@@ -8,3 +8,4 @@
 /tmp/*
 /access.log
 /error.log
+/progress/
