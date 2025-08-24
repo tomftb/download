@@ -136,9 +136,20 @@ class downloadMulti {
         foreach($uidLid as $uid){
             setcookie($uid, "test", time()+3600);  /* expire in 1 hour */
         }
-        echo __METHOD__."()<BR/>";
-        echo "<p id=\"uid_list\">".json_encode($uidLid)."</p>";
-        echo "<script>window.uid_list = ".json_encode($uidLid)."</script>";
+        //echo __METHOD__."()<BR/>";
+        //echo "<p id=\"uid_list\">".json_encode($uidLid)."</p>";
+        //echo "<script>window.uid_list = ".json_encode($uidLid)."</script>";
+        $response = new \stdClass();
+        $response->{'success'} = false;
+        $response->{'message'} = '';
+        $response->{'data'} = $uidLid;
+        if(empty($uidLid)){
+            $response->{'message'} = 'EMPTY UID LIST';
+        }
+        else{
+             $response->{'success'} = true;
+        }
+        exit(json_encode($response));
     }
 
     private function showCliNotify(array $uidLid=[]):void
@@ -149,11 +160,11 @@ class downloadMulti {
     private function checkProgressDirectory()
     {
         if(defined("PROGRESS_DIRECTORY")){
-            echo "DEFINED APPLICATION CONST PROGRESS_DIRECTORY".$this->newLine;
+            //echo __METHOD__."() DEFINED APPLICATION CONST PROGRESS_DIRECTORY".$this->newLine;
             $this->progressDirectory = PROGRESS_DIRECTORY;
         }
         else{
-            echo "DEFINED APPLICATION CONST PROGRESS_DIRECTORY".$this->newLine;
+            //echo __METHOD__."() UNDEFINED APPLICATION CONST PROGRESS_DIRECTORY".$this->newLine;
             $this->progressDirectory = null;
         }
     }

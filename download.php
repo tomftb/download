@@ -45,22 +45,29 @@ class DownloadFile
          */
         self::setUniqid($argv);
         /*
-         * SET PROGRESS FILE
-         */
-        self::setProgressFile($argv);
-        /*
-         * SET TEMPORARY DOWNLOAD DIRECTORY
-         */
-        self::createTemporaryFileDirectory();
-        /*
          * SET URL
          */
 	$url = $argv[1];
         self::log(__METHOD__."() URL:".PHP_EOL.$url);
-	$client = new Client();
-	$response = $client->request('GET', $url);
+        try{
+            $client = new Client();
+            $response = $client->request('GET', $url);
+            /*
+             * SET PROGRESS FILE
+             */
+            self::setProgressFile($argv);
+            /*
+             * SET TEMPORARY DOWNLOAD DIRECTORY
+             */
+            self::createTemporaryFileDirectory();
+        }
+        catch(\GuzzleHttp\Exception\ConnectException $e){
+            self::log(__METHOD__."() EXECPTION:".PHP_EOL.$e->getMessage());
+            self::clean();
+            return;
+        }
 	$body = $response->getBody("<script>");
-	self::readDOM($body);
+        self::readDOM($body);
         self::log(__METHOD__."() FILES DOWNLOADED - ".strval($this->filesDownloaded));
         if($this->filesDownloaded === 0){
             self::clean();
@@ -417,8 +424,8 @@ class DownloadFile
             $result = mkdir($directoryName, 0777, true);
         }
         if(!$result || !is_dir($directoryName)){
-            echo "[".$this->uniqid."] ".__METHOD__."() ERROR CREATE DIRECTORY ".$directoryName."\r\n";
-            exit();
+            //echo "[".$this->uniqid."] ".__METHOD__."() ERROR CREATE DIRECTORY ".$directoryName."\r\n";
+            exit("[".$this->uniqid."] ".__METHOD__."() ERROR CREATE DIRECTORY ".$directoryName."\r\n");
         }
     }
     

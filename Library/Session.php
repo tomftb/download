@@ -13,7 +13,7 @@ class Session {
     
     public static function save(string $message=""):void
     {
-        echo self::$path."<br/>";
+        //echo self::$path."<br/>";
         file_put_contents(self::$path, $message,FILE_APPEND);
     }
 

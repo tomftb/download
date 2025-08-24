@@ -50,8 +50,7 @@ class Progress {
                 continue;
             }
             self::removeProgressFile();
-            echo json_encode(['success' => false,'message'=>"<b>[".$this->uid."]</b> COMPLETE - ".$file]);
-            exit();
+            exit(json_encode(['success' => false,'message'=>"<b>[".$this->uid."]</b> COMPLETE - ".$file]));
         }
     }
 
@@ -73,25 +72,22 @@ class Progress {
     {
         if (!file_exists($dir)) {
             //header('Content-Type: application/json; charset=utf-8');
-            echo json_encode(['success' => false,'message'=>'<b>['.$this->uid.']</b> DIRECTORY `'.$dir.'` NOT EXISTS']);
             /*
              * FILE NOT EXISTS
              */
-            exit();
+            exit(json_encode(['success' => false,'message'=>'<b>['.$this->uid.']</b> DIRECTORY `'.$dir.'` NOT EXISTS']));
         }
         if(!is_dir($dir)){
-            echo json_encode(['success' => false,'message'=>"<b>[".$this->uid."]</b> NOT A DIRECTORY `".$dir."`"]);
             /*
              * NOT A DIRECTORY
              */
-            exit();
+            exit(json_encode(['success' => false,'message'=>"<b>[".$this->uid."]</b> NOT A DIRECTORY `".$dir."`"]));
         }
         if(!is_readable($dir)){
-            echo json_encode(['success' => false,'message'=>"<b>[".$this->uid."]</b> DIRECTORY `".$dir."` no read permission"]);
             /*
              * NO READ PERMISSIONS
              */
-            exit();  
+            exit(json_encode(['success' => false,'message'=>"<b>[".$this->uid."]</b> DIRECTORY `".$dir."` no read permission"]));  
         }
     }
 
