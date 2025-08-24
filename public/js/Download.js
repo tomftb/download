@@ -56,7 +56,7 @@ Download = function(){
                     }
                 }
                 catch(e){
-                    
+                    setAlert(e);
                     console.error(e);
                 }
             };
@@ -111,6 +111,21 @@ Download = function(){
         catch(e){
             console.error('Download.saveLog()',value);
         }
-        
+    }
+    
+    function setAlert(message)
+    {
+        let alertBox = document.getElementById('alert');
+        if(alertBox === null || alertBox === undefined){
+            console.error('Download().setAlert() NOT FOUND `alert` ',alertBox);
+        }
+        if(alertBox.classList.contains('d-none')){
+            alertBox.classList.remove('d-none');
+        }
+        let p = document.createElement('p');
+            p.classList.add('text-start','mb-1');
+        let text = document.createTextNode(message);
+            p.appendChild(text);
+            alertBox.prepend(p);
     }
 }();

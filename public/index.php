@@ -39,6 +39,8 @@ $token = $_SESSION['_csrf_token'] = bin2hex(random_bytes(32));
 $date = date("Y.m.d h:i:sa");
 
 echo '<div class="container-lg">';
+echo '<div class="mb-1 mt-1 alert alert-danger d-none" id="alert">';
+echo "</div>";
 echo '<form method="POST" action="" target="_self" id="form">';
 echo '<div class="mb-3">';
 echo '<label for="url" class="form-label">Urls</label>';
