@@ -1,5 +1,5 @@
 # download
-Download for URL
+Download from URL
 
 Execute:
 composer install
