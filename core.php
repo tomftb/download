@@ -23,9 +23,7 @@ if(!defined("TEMPORARY_DIRECTORY")){
 if(!defined("PROGRESS_DIRECTORY")){
     define("PROGRESS_DIRECTORY",APP_ROOT."progress".DS);
 }
-require_once(APP_ROOT."Library".DS."Directory.php");
-require_once(APP_ROOT."Library".DS."File.php");
-require_once(APP_ROOT."Library".DS."Session.php");
+require_once(__DIR__.DS."AutoLoad.php");
 \Library\Directory::create(TMP,true);
 \Library\Directory::create(PROGRESS_DIRECTORY,true);
 \Library\Session::create(LOG_DIRECTORY,true);
