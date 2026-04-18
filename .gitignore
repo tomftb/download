@@ -5,7 +5,6 @@
 /log/*
 /vendor/*
 /tmp/*
-/tmp/*
 /access.log
 /error.log
-/progress/
+/progress/*

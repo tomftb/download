@@ -23,6 +23,10 @@ class DownloadFile
     private array $toDelete = [];
     private \CurlHandle $curlHandle;
     private ?string $saveProgressPath = null;
+    private array $content_types = [
+        'application/octet-stream',
+        'video/mp2t'
+    ];
 
     public function __construct()
     {
@@ -479,17 +483,22 @@ class DownloadFile
         if($info['http_code'] !== 200){
             Throw New \Exception(__METHOD__."() cURL `".$info['url']."` WRONG HTTP CODE:".PHP_EOL.$info['http_code']);
         }
-        if($info['content_type'] !== 'video/mp2t'){
-            Throw New \Exception(__METHOD__."() cURL `".$info['url']."` WRONG CONTNET TYPE:".PHP_EOL.$info['content_type']);
+        if(!in_array($info['content_type'],$this->content_types)){
+            Throw New \Exception(__METHOD__."() cURL `".$info['url']."` UNSUPPORTED CONTNET TYPE `".$info['content_type']."`".PHP_EOL."SUPPORTED CONTENT TYPES:".PHP_EOL.implode(PHP_EOL,$this->content_types));    
         }
     }
     
     private function setUniqid(?array $argv=[]):void
     {
+        if(is_null($argv)){
+            self::log(__METHOD__."() SET INTERNAL UNIQID");
+            $this->uniqid = strval(time()).uniqid();
+            return;
+        }
         if(array_key_exists(2,$argv)){
             self::log(__METHOD__."() SET EXTERNAL UNIQID");
             $this->uniqid = $argv[2];
-	}
+	    }
         else{
             self::log(__METHOD__."() SET INTERNAL UNIQID");
             $this->uniqid = strval(time()).uniqid();
@@ -502,11 +511,11 @@ class DownloadFile
         if($argv === null){
             self::log(__METHOD__."() SCRIPT ERROR:".PHP_EOL.": argv === null");
             exit();
-	}
-	if(!array_key_exists(1,$argv)){
-            self::log(__METHOD__."() SCRIPT ERROR:".PHP_EOL." SET URL AS AN ARGUMENT OF SCRIPT");
-            exit();
-	}
+	    }
+        if(!array_key_exists(1,$argv)){
+                self::log(__METHOD__."() SCRIPT ERROR:".PHP_EOL." SET URL AS AN ARGUMENT OF SCRIPT");
+                exit();
+        }
     }
 
     private function setProgressFile(?array $argv=[]):void
@@ -514,7 +523,7 @@ class DownloadFile
         if(array_key_exists(3,$argv)){
             self::log(__METHOD__."() SET PROGRESS FILE");
             $this->saveProgressPath = $argv[3];
-	}
+	    }
         else{
             self::log(__METHOD__."() NO PROGRESS FILE");
         }
